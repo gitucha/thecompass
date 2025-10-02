@@ -6,7 +6,7 @@ class Category(models.Model):
     name = models.CharField(max_length=50, unique=True)
     description = models.TextField(blank=True, null=True)
 
-    def _str_(self):
+    def __str__(self):
         return self.name
 
 class NewsArticle(models.Model):
@@ -22,15 +22,18 @@ class NewsArticle(models.Model):
     image = CloudinaryField('image', blank=True, null=True)
     published_at = models.DateTimeField(auto_now_add=True)
 
-    def _str_(self):
+    def __str__(self):
         return self.title
     
     
 class Comment(models.Model):
     article = models.ForeignKey(NewsArticle, on_delete=models.CASCADE, related_name='comments')
-    author_name = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='comments')
+    author_name = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, blank=True, related_name='comments')
     content = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
+    parent = models.ForeignKey('self', null=True, blank=True, on_delete=models.CASCADE, related_name='replies')
 
-    def _str_(self):
-        return f'Comment by {self.author_name} on {self.article.title}'
+    def __str__(self):
+        if self.author_name:
+            return f'Comment by {self.author_name.username} on {self.article.title}'
+        return f'Comment by Anonymous on {self.article.title}'

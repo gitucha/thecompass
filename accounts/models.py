@@ -9,6 +9,7 @@ class CustomUserManager(BaseUserManager):
         email = self.normalize_email(email)
         user = self.model(email=email, **extra_fields)
         user.set_password(password)
+        user.role = CustomUser.UserRole.VIEWER
         user.save(using=self._db)
         return user
 
@@ -47,7 +48,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
 
-    def _str_(self):
+    def __str__(self):
         return self.username if self.username else self.email
 
     # Role check methods
@@ -62,6 +63,11 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     
     def is_viewer(self):
         return self.role == self.UserRole.VIEWER
+    
+    def get_display_name(self):
+        if self.first_name or self.last_name:
+            return f"{self.first_name} {self.last_name}".strip()
+        return self.username if self.username else self.email
 
 class Profile(models.Model):
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
@@ -70,5 +76,5 @@ class Profile(models.Model):
     location = models.CharField(max_length=30, blank=True)
     avatar = CloudinaryField('image', blank=True, null=True)
     
-    def _str_(self):
-        return f"{self.user.username}'s profile" if self.user.username else f"{self.user.email}'s profile"
+    def __str__(self):
+        return f"{self.user.username}'s profile" if self.user.username else f"{self.user.email}'s profile" 
